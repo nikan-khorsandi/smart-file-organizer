@@ -1,8 +1,9 @@
+import shutil
 from pathlib import Path
 
 
 def main():
-    folder = input("Enter folder path: ")
+    folder = input("Enter folder path: ").strip()
 
     folder_path = Path(folder)
 
@@ -33,8 +34,8 @@ def main():
 
     document_extensions = [
         ".pdf",
-        ".docx",
         ".doc",
+        ".docx",
         ".txt",
         ".xlsx",
         ".pptx",
@@ -61,14 +62,21 @@ def main():
     archives_folder = folder_path / "Archives"
     others_folder = folder_path / "Others"
 
-    images_folder.mkdir(exist_ok=True)
-    videos_folder.mkdir(exist_ok=True)
-    documents_folder.mkdir(exist_ok=True)
-    audio_folder.mkdir(exist_ok=True)
-    archives_folder.mkdir(exist_ok=True)
-    others_folder.mkdir(exist_ok=True)
+    folders = [
+        images_folder,
+        videos_folder,
+        documents_folder,
+        audio_folder,
+        archives_folder,
+        others_folder,
+    ]
 
-    print("\nFiles to organize:\n")
+    for folder in folders:
+        folder.mkdir(exist_ok=True)
+
+    operations = []
+
+    print("\n========== Preview ==========\n")
 
     for item in folder_path.iterdir():
 
@@ -107,16 +115,48 @@ def main():
 
                 counter += 1
 
-        print("-" * 40)
-        print(f"Moving:      {item.name}")
-        print(f"Source:      {item}")
-        print(f"Destination: {destination}")
+        operations.append((item, destination))
 
-    answer = input("\nDo you want to move these files? (Y/N): ").strip().lower()
+        print("-" * 40)
+        print(f"File : {item.name}")
+        print(f"From : {item}")
+        print(f"To   : {destination}")
+
+    if not operations:
+        print("No files found.")
+        return
+
+    answer = input(
+        "\nDo you want to move these files? (Y/N): "
+    ).strip().lower()
 
     if answer != "y":
         print("Operation cancelled.")
         return
 
-    print("Moving files...")
-    print("(Real file moving will be implemented in the next step.)")
+    print("\nMoving files...\n")
+
+    moved_count = 0
+    failed_count = 0
+
+    for source, destination in operations:
+
+        try:
+
+            shutil.move(str(source), str(destination))
+
+            moved_count += 1
+
+            print(f"✅ {source.name}")
+
+        except Exception as error:
+
+            failed_count += 1
+
+            print(f"❌ {source.name}")
+            print(f"Reason: {error}")
+
+    print("\n========== Summary ==========")
+    print(f"Moved Files : {moved_count}")
+    print(f"Failed Files: {failed_count}")
+    print("=============================")
